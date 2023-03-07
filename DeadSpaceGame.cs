@@ -135,8 +135,6 @@ namespace EndlessRunner
             _entityManager.AddEntity(_powerupManager);
             _entityManager.AddEntity(_skyManager);
 
-            _platformManager.Initialise();
-
             LoadSaveData();
         }
 

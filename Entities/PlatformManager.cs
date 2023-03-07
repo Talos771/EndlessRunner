@@ -101,8 +101,9 @@ namespace EndlessRunner.Entities
             }
 
             // If the player has run off the platform then the player will need to fall
-            if (_player.Position.X > PlayersPlatform.Position.X + SPRITE_WIDTH)
-                _player.Drop();
+            if (PlayersPlatform != null)
+                if (_player.Position.X > PlayersPlatform.Position.X + SPRITE_WIDTH)
+                    _player.Drop();
 
             // Increases the distance between platforms up to a point (increases difficulty of the game)
             if (PlatformDistance > PLATFORM_MAX_DISTANCE)

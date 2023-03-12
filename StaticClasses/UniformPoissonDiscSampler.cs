@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,14 +9,14 @@ namespace EndlessRunner.StaticClasses
 {
     public class UniformPoissonDiscSampler
     {
-        public const int DefaultPointsPerIteration = 30;
+        public const int DefaultNumPoints = 30;
         static readonly float SquareRootTwo = (float)Math.Sqrt(2);
         public static Random r = new Random();
 
 
         struct Grid
         {
-            public Vector2 TopLeft, LowerRight, Centre;
+            public Vector2 TopLeft, BottomRight, Centre;
             public Vector2 Dimensions;
             public float? RejectionSqDistance;
             public float MinDistance;
@@ -32,7 +32,7 @@ namespace EndlessRunner.StaticClasses
 
         public static List<Vector2> SampleCircle(Vector2 centre, float radius, float minDistance)
         {
-            return SampleCircle(centre, radius, minDistance, DefaultPointsPerIteration);
+            return SampleCircle(centre, radius, minDistance, DefaultNumPoints);
         }
 
         public static List<Vector2> SampleCircle(Vector2 centre, float radius, float minDistance, int pointsPerIteration)
@@ -42,7 +42,7 @@ namespace EndlessRunner.StaticClasses
 
         public static List<Vector2> SampleRectangle(Vector2 topLeft, Vector2 lowerRight, float minDistance)
         {
-            return SampleRectangle(topLeft, lowerRight, minDistance, DefaultPointsPerIteration);
+            return SampleRectangle(topLeft, lowerRight, minDistance, DefaultNumPoints);
         }
 
         public static List<Vector2> SampleRectangle(Vector2 topLeft, Vector2 lowerRight, float minDistance, int pointsPerIteration)
@@ -54,19 +54,19 @@ namespace EndlessRunner.StaticClasses
         /// Generates all the points in the grid
         /// </summary>
         /// <param name="topLeft"></param>
-        /// <param name="lowerRight"></param>
+        /// <param name="bottomRight"></param>
         /// <param name="rejectionDistance"></param>
         /// <param name="minDistance"></param>
-        /// <param name="pointsPerIteration"></param>
+        /// <param name="numPoints"></param>
         /// <returns></returns>
-        private static List<Vector2> Sample(Vector2 topLeft, Vector2 lowerRight, float? rejectionDistance, float minDistance, int pointsPerIteration)
+        private static List<Vector2> Sample(Vector2 topLeft, Vector2 bottomRight, float? rejectionDistance, float minDistance, int numPoints)
         {
-            var grid = new Grid()
+            Grid grid = new Grid()
             {
                 TopLeft = topLeft,
-                LowerRight = lowerRight,
-                Dimensions = lowerRight - topLeft,
-                Centre = (topLeft + lowerRight) / 2,
+                BottomRight = bottomRight,
+                Dimensions = bottomRight - topLeft,
+                Centre = (topLeft + bottomRight) / 2,
                 CellSize = minDistance / SquareRootTwo,
                 MinDistance = minDistance,
                 RejectionSqDistance = rejectionDistance == null ? null : rejectionDistance * rejectionDistance
@@ -75,7 +75,7 @@ namespace EndlessRunner.StaticClasses
             grid.GridWidth = (int)(grid.Dimensions.X / grid.CellSize) + 1;
             grid.GridHeight = (int)(grid.Dimensions.Y / grid.CellSize) + 1;
 
-            var state = new State()
+            State state = new State()
             {
                 Grid = new Vector2?[grid.GridWidth, grid.GridHeight],
                 ActivePoints = new List<Vector2>(),
@@ -87,12 +87,12 @@ namespace EndlessRunner.StaticClasses
             //Creates all the rest of the points in the grid
             while (state.ActivePoints.Count != 0)
             {
-                var listIndex = r.Next(state.ActivePoints.Count);
-                var point = state.ActivePoints[listIndex];
+                int listIndex = r.Next(state.ActivePoints.Count);
+                Vector2 point = state.ActivePoints[listIndex];
                 bool found = false;
 
                 // Generates the rest of the points in the grid
-                for (int i = 0; i < pointsPerIteration; i++)
+                for (int i = 0; i < numPoints; i++)
                     found |= AddNextPoint(point, ref grid, ref state);
 
                 if (!found)
@@ -112,19 +112,19 @@ namespace EndlessRunner.StaticClasses
 
             while (!added)
             {
-                var d = r.NextDouble();
-                var xr = grid.TopLeft.X + grid.Dimensions.X * d;
+                double increaseMultiplier = r.NextDouble();
+                double xr = grid.TopLeft.X + grid.Dimensions.X * increaseMultiplier;
 
-                d = r.NextDouble();
-                var yr = grid.TopLeft.Y + grid.Dimensions.Y * d;
+                increaseMultiplier = r.NextDouble();
+                double yr = grid.TopLeft.Y + grid.Dimensions.Y * increaseMultiplier;
 
-                var p = new Vector2((float)xr, (float)yr);
+                Vector2 p = new Vector2((float)xr, (float)yr);
 
                 if (grid.RejectionSqDistance != null && Vector2.DistanceSquared(grid.Centre, p) > grid.RejectionSqDistance)
                     continue;
                 added = true;
 
-                var index = Denormalise(p, grid.TopLeft, grid.CellSize);
+                Vector2 index = Denormalise(p, grid.TopLeft, grid.CellSize);
 
                 state.Grid[(int)index.X, (int)index.Y] = p;
 
@@ -136,34 +136,34 @@ namespace EndlessRunner.StaticClasses
         /// <summary>
         /// Creates a new point in the grid
         /// </summary>
-        /// <param name="point"></param>
+        /// <param name="startPoint"></param>
         /// <param name="grid"></param>
         /// <param name="state"></param>
         /// <returns></returns>
-        private static bool AddNextPoint(Vector2 point, ref Grid grid, ref State state)
+        private static bool AddNextPoint(Vector2 startPoint, ref Grid grid, ref State state)
         {
             bool found = false;
 
-            var q = GenerateRandomAround(point, grid.MinDistance);
+            Vector2 point = GenerateRandomAround(startPoint, grid.MinDistance);
 
             if
                (
-                q.X >= grid.TopLeft.X &&
-                q.X < grid.LowerRight.X &&
-                q.Y > grid.TopLeft.Y &&
-                q.Y < grid.LowerRight.Y &&
-                (grid.RejectionSqDistance == null || Vector2.DistanceSquared(grid.Centre, q) <= grid.RejectionSqDistance)
+                point.X >= grid.TopLeft.X &&
+                point.X < grid.BottomRight.X &&
+                point.Y > grid.TopLeft.Y &&
+                point.Y < grid.BottomRight.Y &&
+                (grid.RejectionSqDistance == null || Vector2.DistanceSquared(grid.Centre, point) <= grid.RejectionSqDistance)
                )
             {
-                var qIndex = Denormalise(q, grid.TopLeft, grid.CellSize);
+                Vector2 cell = Denormalise(point, grid.TopLeft, grid.CellSize);
                 bool tooClose = false;
 
-                // Checks that the generated point isn't too close to already existing points
-                for (int i = (int)Math.Max(0, qIndex.X - 2); i < Math.Min(grid.GridWidth, qIndex.X + 3) && !tooClose; i++)
+                // Checks that the generated point isn't too close to already existing points or in the same cell as another point
+                for (int i = (int)Math.Max(0, cell.X - 2); i < Math.Min(grid.GridWidth, cell.X + 3) && !tooClose; i++)
                 {
-                    for (int j = (int)Math.Max(0, qIndex.Y - 2); j < Math.Min(grid.GridHeight, qIndex.Y + 3) && !tooClose; j++)
+                    for (int j = (int)Math.Max(0, cell.Y - 2); j < Math.Min(grid.GridHeight, cell.Y + 3) && !tooClose; j++)
                     {
-                        if (state.Grid[i, j].HasValue && Vector2.Distance(state.Grid[i, j].Value, q) < grid.MinDistance)
+                        if (state.Grid[i, j].HasValue && Vector2.Distance(state.Grid[i, j].Value, point) < grid.MinDistance)
                             tooClose = true;
                     }
                 }
@@ -172,9 +172,9 @@ namespace EndlessRunner.StaticClasses
                 if (!tooClose)
                 {
                     found = true;
-                    state.ActivePoints.Add(q);
-                    state.Points.Add(q);
-                    state.Grid[(int)qIndex.X, (int)qIndex.Y] = q;
+                    state.ActivePoints.Add(point);
+                    state.Points.Add(point);
+                    state.Grid[(int)cell.X, (int)cell.Y] = point;
                 }
             }
             return found;
@@ -188,14 +188,14 @@ namespace EndlessRunner.StaticClasses
         /// <returns></returns>
         private static Vector2 GenerateRandomAround(Vector2 centre, float minDistance)
         {
-            var d = r.NextDouble();
-            var radius = minDistance + minDistance * d;
+            double increaseMultiplyer = r.NextDouble();
+            double radius = minDistance + minDistance * increaseMultiplyer;
 
-            d = r.NextDouble();
-            var angle = Math.PI * 2 * d;
+            increaseMultiplyer = r.NextDouble();
+            double angle = Math.PI * 2 * increaseMultiplyer;
 
-            var newX = radius * Math.Sin(angle);
-            var newY = radius * Math.Cos(angle);
+            double newX = radius * Math.Cos(angle);
+            double newY = radius * Math.Sin(angle);
 
             return new Vector2((float)(centre.X + newX), (float)(centre.Y + newY));
         }

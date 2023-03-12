@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -69,7 +69,7 @@ namespace EndlessRunner.Entities
 
         // Speed variables (player is responsible for the speed of the game)
         public const float START_SPEED = 100f;
-        public const float MAX_SPEED = 250f;
+        public const float MAX_SPEED = 300f;
         private const float ACCELERATION_PPS_PER_SECOND = 1.5f;
         private const float DEATH_SPEED = 200f;
 
@@ -79,8 +79,8 @@ namespace EndlessRunner.Entities
         private const int POWERUP_AMMUNITION_INCREASE = 3;
 
         // Gravity variables
-        private const int MINIMUM_GRAVITY_INCREASE = 50;
-        private const int MAXIMUM_GRAVITY_INCREASE = 180;
+        private const int MINIMUM_GRAVITY_DECREASE = 50;
+        private const int MAXIMUM_GRAVITY_DECREASE = 180;
         private const float GRAVITY_CHANGE_TIMER = 1f;
         private float _gravityChangeTimeLeft;
 
@@ -205,7 +205,7 @@ namespace EndlessRunner.Entities
         }
 
         /// <summary>
-        /// Initialises the player when the gaem first starts or is replayed
+        /// Initialises the player when the game first starts or is replayed
         /// </summary>
         public void Initialise()
         {
@@ -244,10 +244,6 @@ namespace EndlessRunner.Entities
                 }
                 else if (State == PlayerState.Idle)
                 {
-                        _idleSprite.Draw(spriteBatch, Position);
-                }
-                else if (State == PlayerState.Idle)
-                {
                     _idleSprite.Draw(spriteBatch, Position);
                 }
                 else if (State == PlayerState.Jumping || State == PlayerState.Falling)
@@ -264,6 +260,7 @@ namespace EndlessRunner.Entities
                 }
 
 
+                // Displays the ammunition the player currently has
                 if (Ammunition > 0)
                 {
                     for (int i = 0; i < Ammunition; i++)
@@ -273,6 +270,7 @@ namespace EndlessRunner.Entities
                     }
                 }
 
+                // Displays whether the player has a shield or not
                 if (HasShield)
                 {
                     Vector2 pos = new Vector2(SHIELD_DISPLAY_X, SHIELD_DISPLAY_Y);
@@ -284,10 +282,18 @@ namespace EndlessRunner.Entities
 
         public void Update(GameTime gameTime)
         {
+            // Controls the physics of the character using SUVAT
             if (State == PlayerState.Jumping || State == PlayerState.Falling)
             {
-                Position = new Vector2(Position.X, Position.Y + _verticalVelocity * (float)gameTime.ElapsedGameTime.TotalSeconds);
-                _verticalVelocity += AccelerationByGravity * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                float v = _verticalVelocity;
+                float t = (float)gameTime.ElapsedGameTime.TotalSeconds;
+                float a = AccelerationByGravity;
+
+                // S = vt - 0.5at^2
+                Vector2 s = new Vector2(0, v * t - (float)(0.5 * a * Math.Pow(t, 2)));
+                Position = new Vector2(Position.X, Position.Y) + s;
+                // v = u + at
+                _verticalVelocity = v + a * t;
 
                 if (_verticalVelocity >= 0)
                     State = PlayerState.Falling;
@@ -308,6 +314,7 @@ namespace EndlessRunner.Entities
                     OnDied();
                     State = PlayerState.Idle;
                 }
+
             }
 
             // Removes each projectile that has moved off the screen
@@ -453,16 +460,16 @@ namespace EndlessRunner.Entities
         }
 
         /// <summary>
-        /// Chnages the gravity when a gravity powerup is picked up
+        /// Changes the gravity when a gravity powerup is picked up
         /// </summary>
         public void ChangeGravity()
         {
             Random r = new Random();
 
             double newGrav;
-            newGrav = r.NextDouble() * (MAXIMUM_GRAVITY_INCREASE - MINIMUM_GRAVITY_INCREASE) + MINIMUM_GRAVITY_INCREASE;
+            newGrav = r.NextDouble() * (MAXIMUM_GRAVITY_DECREASE - MINIMUM_GRAVITY_DECREASE) + MINIMUM_GRAVITY_DECREASE;
 
-            AccelerationByGravity += (float)newGrav;
+            AccelerationByGravity -= (float)newGrav;
 
             _gravityChangeTimeLeft = 10;
         }

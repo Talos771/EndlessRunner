@@ -79,7 +79,7 @@ namespace EndlessRunner.Entities
         private const int POWERUP_AMMUNITION_INCREASE = 3;
 
         // Gravity variables
-        private const int MINIMUM_GRAVITY_INCREASE = -150;
+        private const int MINIMUM_GRAVITY_INCREASE = 50;
         private const int MAXIMUM_GRAVITY_INCREASE = 180;
         private const float GRAVITY_CHANGE_TIMER = 1f;
         private float _gravityChangeTimeLeft;

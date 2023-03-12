@@ -40,14 +40,14 @@ namespace EndlessRunner.StaticClasses
             return Sample(centre - new Vector2(radius), centre + new Vector2(radius), radius, minDistance, pointsPerIteration);
         }
 
-        public static List<Vector2> SampleRectangle(Vector2 topLeft, Vector2 lowerRight, float minDistance)
+        public static List<Vector2> SampleRectangle(Vector2 topLeft, Vector2 bottomRight, float minDistance)
         {
-            return SampleRectangle(topLeft, lowerRight, minDistance, DefaultNumPoints);
+            return SampleRectangle(topLeft, bottomRight, minDistance, DefaultNumPoints);
         }
 
-        public static List<Vector2> SampleRectangle(Vector2 topLeft, Vector2 lowerRight, float minDistance, int pointsPerIteration)
+        public static List<Vector2> SampleRectangle(Vector2 topLeft, Vector2 bottomRight, float minDistance, int pointsPerIteration)
         {
-            return Sample(topLeft, lowerRight, null, minDistance, pointsPerIteration);
+            return Sample(topLeft, bottomRight, null, minDistance, pointsPerIteration);
         }
 
         /// <summary>
@@ -113,23 +113,23 @@ namespace EndlessRunner.StaticClasses
             while (!added)
             {
                 double increaseMultiplier = r.NextDouble();
-                double xr = grid.TopLeft.X + grid.Dimensions.X * increaseMultiplier;
+                double x = grid.TopLeft.X + grid.Dimensions.X * increaseMultiplier;
 
                 increaseMultiplier = r.NextDouble();
-                double yr = grid.TopLeft.Y + grid.Dimensions.Y * increaseMultiplier;
+                double y = grid.TopLeft.Y + grid.Dimensions.Y * increaseMultiplier;
 
-                Vector2 p = new Vector2((float)xr, (float)yr);
+                Vector2 point = new Vector2((float)x, (float)y);
 
-                if (grid.RejectionSqDistance != null && Vector2.DistanceSquared(grid.Centre, p) > grid.RejectionSqDistance)
+                if (grid.RejectionSqDistance != null && Vector2.DistanceSquared(grid.Centre, point) > grid.RejectionSqDistance)
                     continue;
                 added = true;
 
-                Vector2 index = Denormalise(p, grid.TopLeft, grid.CellSize);
+                Vector2 index = Denormalise(point, grid.TopLeft, grid.CellSize);
 
-                state.Grid[(int)index.X, (int)index.Y] = p;
+                state.Grid[(int)index.X, (int)index.Y] = point;
 
-                state.ActivePoints.Add(p);
-                state.Points.Add(p);
+                state.ActivePoints.Add(point);
+                state.Points.Add(point);
             }
         }
 

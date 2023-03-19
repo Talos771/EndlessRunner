@@ -32,22 +32,12 @@ namespace EndlessRunner.StaticClasses
 
         public static List<Vector2> SampleCircle(Vector2 centre, float radius, float minDistance)
         {
-            return SampleCircle(centre, radius, minDistance, DefaultNumPoints);
-        }
-
-        public static List<Vector2> SampleCircle(Vector2 centre, float radius, float minDistance, int pointsPerIteration)
-        {
-            return Sample(centre - new Vector2(radius), centre + new Vector2(radius), radius, minDistance, pointsPerIteration);
+            return Sample(centre - new Vector2(radius), centre + new Vector2(radius), radius, minDistance, DefaultNumPoints);
         }
 
         public static List<Vector2> SampleRectangle(Vector2 topLeft, Vector2 bottomRight, float minDistance)
         {
-            return SampleRectangle(topLeft, bottomRight, minDistance, DefaultNumPoints);
-        }
-
-        public static List<Vector2> SampleRectangle(Vector2 topLeft, Vector2 bottomRight, float minDistance, int pointsPerIteration)
-        {
-            return Sample(topLeft, bottomRight, null, minDistance, pointsPerIteration);
+            return Sample(topLeft, bottomRight, null, minDistance, DefaultNumPoints);
         }
 
         /// <summary>

@@ -1,8 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using SharpDX.DirectWrite;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,6 +18,7 @@ namespace EndlessRunner.Menu
         MenuManager _menuManager;
 
         public string Text { get; set; }
+        public string DisplayText { get; set; }
 
 
         public TextInput(MenuManager menuManager) 
@@ -29,10 +31,13 @@ namespace EndlessRunner.Menu
             // Reads the key that should be entered
             KeyboardState keyboardState = Keyboard.GetState();
 
-            if (keyboardState.IsKeyDown(Keys.Enter))
+            if (keyboardState.IsKeyDown(Keys.Enter) && Text.Length > 0)
             {
-                // If the enter key is pressed then the name has been entered and the game saves
-                _menuManager.OnSave();
+                // If the enter key is pressed then the text has been entered and the game saves
+                if (_maxInputString == 10)
+                    _menuManager.OnSave();
+                else
+                    _menuManager.OnCharacterEntered();
             }
             else if (keyboardState.IsKeyDown(Keys.Back) && !_previousKeyBoardState.IsKeyDown(Keys.Back))
             {
@@ -54,7 +59,6 @@ namespace EndlessRunner.Menu
                             Text += keyPressed.ToString();
                     }
                 }
-
             }
 
             _previousKeyBoardState = keyboardState;
@@ -64,9 +68,10 @@ namespace EndlessRunner.Menu
         /// Allows the user to enter text of a specified length
         /// </summary>
         /// <param name="maxInputString"></param>
-        public void NewText(int maxInputString)
+        public void NewText(int maxInputString, string textToDisplay)
         {
             _maxInputString = maxInputString;
+            DisplayText = textToDisplay;
             Text = "";
         }
     }

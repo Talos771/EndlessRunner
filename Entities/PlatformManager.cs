@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 using EndlessRunner.Graphics;
 using EndlessRunner.Menu;
 using EndlessRunner.StaticClasses;
+using MonoGame.Extended;
 
 namespace EndlessRunner.Entities
 {
@@ -24,9 +25,10 @@ namespace EndlessRunner.Entities
         private const int GRID_TOP_LEFT_Y = 200;
         private const int GRID_BOTTOM_RIGHT_X = DeadSpaceGame.WINDOW_WIDTH + 800;
         private const int GRID_BOTTOM_RIGHT_Y = 750;
+
         private const int PLATFORM_MIN_DISTANCE = 169;
-        private const int PLATFORM_MAX_DISTANCE = 300;
-        private const float PLATFORM_DISTANCE_INCREMENT = 0.25f;
+        private const int PLATFORM_MAX_DISTANCE = 250;
+        private const float PLATFORM_DISTANCE_INCREMENT = 0.55f;
 
         private readonly List<Platform> _platforms;
         private Sprite _platformSprite;
@@ -38,9 +40,9 @@ namespace EndlessRunner.Entities
         private MenuManager _menuManager;
 
         private List<Vector2> Positions { get; set; }
-        public Platform PlayersPlatform { get; set; }
+        private Platform PlayersPlatform { get; set; }
         public int DrawOrder { get; set; }
-        public float PlatformDistance { get; set; }
+        private float PlatformDistance { get; set; }
 
         public PlatformManager(Texture2D spriteSheet, EntityManager entityManager, Astronaut player, MenuManager menuManager)
         {
@@ -51,8 +53,6 @@ namespace EndlessRunner.Entities
             _platformSprite = new Sprite(spriteSheet, SPRITE_POS_X, SPRITE_POS_Y, SPRITE_WIDTH, SPRITE_HEIGHT);
 
             _player = player;
-
-            DrawOrder = 10;
         }
 
         public void Update(GameTime gameTime)
@@ -80,7 +80,7 @@ namespace EndlessRunner.Entities
                     _entityManager.RemoveEntity(p);
                     platformsToRemove.Add(p);
                 }
-                p.Position = new Vector2(p.PosX, p.PosY);
+                p.Position = new Vector2(p.PosX, p.Position.Y);
             }
 
             // Removes every platform that has moved off the screen
@@ -95,8 +95,8 @@ namespace EndlessRunner.Entities
             {
                 if (p.CollisionBox.Intersects(_player.FeetHitBox))
                 {
-                    _player.Land(p);
                     PlayersPlatform = p;
+                    _player.Land(PlayersPlatform);
                 }
             }
 
@@ -114,6 +114,11 @@ namespace EndlessRunner.Entities
 
         public void Draw(SpriteBatch spriteBatch, GameTime gameTime)
         {
+            // Testing to show poisson distribution
+            /*
+            foreach (Platform p in _platforms)
+                spriteBatch.DrawCircle(p.Position, PlatformDistance, 100, Color.White);
+            */
         }
 
         /// <summary>
@@ -135,7 +140,7 @@ namespace EndlessRunner.Entities
 
             PlayersPlatform = startPlatform;
 
-            GenerateTiles(200);
+            GenerateTiles(160);
         }
 
         /// <summary>

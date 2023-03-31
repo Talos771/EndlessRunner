@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -15,9 +15,6 @@ namespace EndlessRunner.Entities
 
         private readonly List<IGameEntity> _entitiesToAdd = new List<IGameEntity>();
         private readonly List<IGameEntity> _entitiesToRemove = new List<IGameEntity>();
-
-        public IEnumerable<IGameEntity> Entities => new ReadOnlyCollection<IGameEntity>(_entities);
-
 
         public void Update(GameTime gameTime)
         {

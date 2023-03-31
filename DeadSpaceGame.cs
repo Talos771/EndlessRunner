@@ -1,4 +1,4 @@
-﻿using EndlessRunner.Entities;
+using EndlessRunner.Entities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -11,8 +11,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Runtime.Serialization.Formatters.Binary;
 using EndlessRunner.Starfield;
-using SharpDX.Direct3D9;
-using System.Collections.Generic;
+
 
 namespace EndlessRunner
 {
@@ -75,8 +74,6 @@ namespace EndlessRunner
 
         private PowerupManager _powerupManager;
 
-        public GameState State { get; set; }
-
         public DeadSpaceGame()
         {
             _graphics = new GraphicsDeviceManager(this);
@@ -84,7 +81,6 @@ namespace EndlessRunner
             IsMouseVisible = true;
 
             _entityManager = new EntityManager();
-            State = GameState.Playing;
         }
 
         protected override void Initialize()
@@ -113,6 +109,8 @@ namespace EndlessRunner
             _menuManager.MainMenu += menu_NewGame;
             _menuManager.PlayAgain += menu_PlayAgain;
             _menuManager.SaveTheGame += menu_SaveGame;
+            _menuManager.SaveNewCharacter += menu_ChangeInputKey;
+            _menuManager.ResetSaveData += menu_ResetSaveData;
 
             _starField = new StarField(WINDOW_WIDTH, WINDOW_WIDTH, 500, _menuManager);
 
@@ -125,7 +123,7 @@ namespace EndlessRunner
             _scoreBoard = new ScoreBoard(_spriteSheetTexture, _player, _menuManager, new Vector2(SCORE_BOARD_POS_X, SCORE_BOARD_POS_Y), _font);
             _enemyManager = new EnemyManager(_entityManager, _player, _spriteSheetTexture, _menuManager, _scoreBoard);
             _powerupManager = new PowerupManager(_spriteSheetTexture, _player, _entityManager, _scoreBoard, _enemyManager, _menuManager);
-            _skyManager = new SkyManager(_spriteSheetTexture, _menuManager, _entityManager, _player);
+            _skyManager = new SkyManager(_spriteSheetTexture, _menuManager, _entityManager, _player, _scoreBoard);
 
             _entityManager.AddEntity(_player);
             _entityManager.AddEntity(_platformManager);
@@ -146,9 +144,7 @@ namespace EndlessRunner
 
             base.Update(gameTime);
 
-            // KeyboardState keyboardState = Keyboard.GetState();
-
-            if (State == GameState.Playing)
+            if (_menuManager.State == MenuState.Playing)
                 _playerInputController.ProcessControlls(gameTime);
 
             if (_menuManager.State == MenuState.Main || _menuManager.State == MenuState.Transition)
@@ -179,9 +175,11 @@ namespace EndlessRunner
         public void PlayGame()
         {
             _player.Initialise();
-            State = GameState.Playing;
+
+            //TODO comment out for testing
             _enemyManager.IsEnabled = true;
             _powerupManager.IsEnabled = true;
+
             _scoreBoard.Score = 0;
         }
 
@@ -193,7 +191,6 @@ namespace EndlessRunner
         /// <param name="eventArgs"></param>
         private void player_Died(object sender, EventArgs eventArgs)
         {
-            State = GameState.GameOver;
             _enemyManager.IsEnabled = false;
             _powerupManager.IsEnabled = false;
 
@@ -204,7 +201,6 @@ namespace EndlessRunner
                 if (_scoreBoard.DisplayScore > num || _scoreBoard.HighScore.Count < 10)
                     shouldAdd = true;
             }
-
             if (shouldAdd)
             {
                 // If a score high enough to be on the scoreboard is reached then the menu manager gets a name
@@ -250,9 +246,43 @@ namespace EndlessRunner
         /// <param name="eventArgs"></param>
         private void menu_SaveGame(object sender, EventArgs eventArgs)
         {
-            _scoreBoard.TryAddNewScore(_menuManager.Name);
+            _scoreBoard.TryAddNewScore(_menuManager.NameToSave);
 
             SaveGame();
+        }
+
+        /// <summary>
+        /// Event raised when a input key needs to be changed
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="eventArgs"></param>
+        private void menu_ChangeInputKey(object sender, EventArgs eventArgs)
+        {
+            if (_menuManager.ButtonNameToChange == "Change Jump")
+            {
+                _playerInputController.ChangeJumpKey((int)_menuManager.CharacterToChange);
+                _menuManager.JumpKey = _menuManager.CharacterToChange.ToString();
+            }
+            else if (_menuManager.ButtonNameToChange == "Change Drop")
+            {
+                _playerInputController.ChangeDropKey((int)_menuManager.CharacterToChange);
+                _menuManager.DropKey = _menuManager.CharacterToChange.ToString();
+            }
+            else if (_menuManager.ButtonNameToChange == "Change Attack")
+            {
+                _playerInputController.ChangeAttackKey((int)_menuManager.CharacterToChange);
+                _menuManager.AttackKey = _menuManager.CharacterToChange.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Event raised when the reset button is pressed
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="eventArgs"></param>
+        private void menu_ResetSaveData(object sender, EventArgs eventArgs)
+        {
+            ResetSaveState();
         }
 
         /// <summary>
@@ -309,7 +339,7 @@ namespace EndlessRunner
         }
 
         /// <summary>
-        /// Resets the highscore to 0
+        /// Resets the highscore table
         /// </summary>
         private void ResetSaveState()
         {

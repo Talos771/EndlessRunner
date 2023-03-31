@@ -1,4 +1,4 @@
-﻿using EndlessRunner.Menu;
+using EndlessRunner.Menu;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -28,7 +28,7 @@ namespace EndlessRunner.Entities
 
         private const int AMMO_RNG = 30;
         private const int GRAVITY_RNG = 25;
-        private const int REPELLENT_RNG = 30;
+        private const int REPELLENT_RNG = 15;
         private const int SHIELD_RNG = 30;
 
         private List<Powerup> _powerups = new List<Powerup>();
@@ -45,8 +45,6 @@ namespace EndlessRunner.Entities
             _scoreBoard = scoreBoard;
             _enemyManager = enemyManager;
             _menuManager = menuManager;
-
-            _targetSpawnScore = 75;
         }
 
         public void Draw(SpriteBatch spriteBatch, GameTime gameTime)

@@ -1,4 +1,4 @@
-﻿using EndlessRunner.Menu;
+using EndlessRunner.Menu;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended.BitmapFonts;
@@ -23,10 +23,6 @@ namespace EndlessRunner.Entities
         private const int BACKGROUND_SCORE_POS_X = 184;
         private const int BACKGROUND_SCORE_POS_Y = 272;
         private const int BACKGROUND_SCORE_WIDTH = 130;
-
-        private const int BACKGROUND_HISCORE_POS_X = BACKGROUND_SCORE_POS_X;
-        private const int BACKGROUND_HISCORE_POS_Y = BACKGROUND_SCORE_POS_Y + TEXTURE_COORDS_NUMBER_HEIGHT;
-        private const int BACKGROUND_HISCORE_WIDTH = 163;
 
         // Score display digits
         private const byte NUMBER_DIGITS_TO_DRAW = 5;
@@ -70,8 +66,6 @@ namespace EndlessRunner.Entities
             _font = spriteFont;
             Position = position;
             _menuManager = menuManager;
-
-            // TODO add sound effect when a certain score is reached
         }
 
         public void Update(GameTime gameTime)
@@ -160,27 +154,35 @@ namespace EndlessRunner.Entities
             HighScore.Add(DisplayScore);
             Names.Add(nameToAdd);
 
+            bool sorted = false;
 
             // Bubble sort to sort the list of highscores from lowest to highest
-            for (int i = 0; i < HighScore.Count; i++)
+            while (!sorted)
             {
-                for (int j = 0; j < HighScore.Count - i - 1; j++)
-                {
-                    if (HighScore[j + 1] > HighScore[j])
-                    {
-                        tempScore = HighScore[j + 1];
-                        HighScore[j + 1] = HighScore[j];
-                        HighScore[j] = tempScore;
+                sorted = true;
 
-                        tempName = Names[j + 1];
-                        Names[j + 1] = Names[j];
-                        Names[j] = tempName;
+                for (int i = 0; i < HighScore.Count - 1; i++)
+                {
+                    if (HighScore[i + 1] > HighScore[i])
+                    {
+                        tempScore = HighScore[i + 1];
+                        HighScore[i + 1] = HighScore[i];
+                        HighScore[i] = tempScore;
+
+                        tempName = Names[i + 1];
+                        Names[i + 1] = Names[i];
+                        Names[i] = tempName;
+
+                        sorted = false;
                     }
                 }
             }
 
             if (HighScore.Count > 10)
+            {
                 HighScore.RemoveAt(HighScore.Count - 1);
+                Names.RemoveAt(Names.Count - 1);
+            }
         }
 
         /// <summary>
